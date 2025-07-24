@@ -1,0 +1,176 @@
+# SecureScope Configuration File
+# Production values should be set via environment variables
+
+# Application Settings
+app_name: "SecureScope"
+version: "1.0.0"
+environment: "development"
+debug: false
+log_level: "INFO"
+
+# API Settings
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  timeout: 30
+  max_request_size: 16777216  # 16MB
+
+# Database Configuration
+database:
+  url: "postgresql://secureuser:securepass@postgres:5432/securescope"
+  pool_size: 10
+  max_overflow: 20
+  pool_timeout: 30
+  pool_recycle: 3600
+
+# Redis Configuration
+redis:
+  url: "redis://redis:6379/0"
+  max_connections: 100
+  socket_timeout: 30
+  socket_connect_timeout: 30
+
+# Celery Configuration
+celery:
+  broker_url: "redis://redis:6379/0"
+  result_backend: "redis://redis:6379/0"
+  task_serializer: "json"
+  accept_content: ["json"]
+  result_serializer: "json"
+  timezone: "UTC"
+  enable_utc: true
+  task_routes:
+    'src.core.tasks.scan_domain': {'queue': 'scan_queue'}
+    'src.core.tasks.generate_report': {'queue': 'report_queue'}
+
+# Security Settings
+security:
+  secret_key: "your-secret-key-change-in-production"
+  algorithm: "HS256"
+  access_token_expire_minutes: 30
+  refresh_token_expire_days: 7
+  password_min_length: 8
+  session_timeout: 3600
+  max_login_attempts: 5
+  lockout_duration: 900  # 15 minutes
+
+# Scan Configuration
+scanning:
+  max_concurrent_scans: 10
+  default_timeout: 3600  # 1 hour
+  max_timeout: 7200      # 2 hours
+  result_retention_days: 90
+  max_domains_per_scan: 100
+  
+  # Tool configurations
+  tools:
+    subfinder:
+      timeout: 300
+      sources: ["crtsh", "dnsdumpster", "virustotal"]
+    
+    httpx:
+      timeout: 10
+      threads: 50
+      retries: 2
+    
+    katana:
+      depth: 2
+      threads: 10
+      timeout: 60
+    
+    dalfox:
+      timeout: 30
+      threads: 20
+      blind: true
+
+# Notification Settings
+notifications:
+  email:
+    enabled: true
+    smtp_server: "smtp.gmail.com"
+    smtp_port: 587
+    use_tls: true
+    username: ""
+    password: ""
+    from_address: "noreply@securescope.com"
+  
+  slack:
+    enabled: false
+    webhook_url: ""
+    channel: "#security-alerts"
+  
+  webhook:
+    enabled: true
+    timeout: 30
+    retries: 3
+
+# Rate Limiting
+rate_limiting:
+  enabled: true
+  requests_per_minute: 100
+  burst_size: 150
+  ban_duration: 3600
+
+# Monitoring & Logging
+monitoring:
+  metrics_enabled: true
+  metrics_port: 9000
+  health_check_interval: 30
+  
+logging:
+  format: "json"
+  handlers:
+    - type: "console"
+      level: "INFO"
+    - type: "file"
+      level: "DEBUG"
+      filename: "/app/logs/securescope.log"
+      max_size: "100MB"
+      backup_count: 5
+
+# File Storage
+storage:
+  results_path: "/app/results"
+  reports_path: "/app/reports"
+  temp_path: "/tmp/securescope"
+  max_file_size: "100MB"
+  cleanup_interval: 86400  # 24 hours
+
+# Enterprise Features
+enterprise:
+  multi_tenant: true
+  sso_enabled: false
+  ldap_enabled: false
+  audit_logging: true
+  compliance_reports: true
+  custom_branding: false
+
+# Integrations
+integrations:
+  jira:
+    enabled: false
+    url: ""
+    username: ""
+    api_token: ""
+    project_key: ""
+  
+  splunk:
+    enabled: false
+    host: ""
+    port: 8088
+    token: ""
+  
+  servicenow:
+    enabled: false
+    instance: ""
+    username: ""
+    password: ""
+
+# Backup & Recovery
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention_days: 30
+  s3_bucket: ""
+  encryption_enabled: true
